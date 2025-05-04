@@ -22,7 +22,18 @@ namespace SpacetimeDB.Types
 
         public bool InvokePlayerSplit(ReducerEventContext ctx, Reducer.PlayerSplit args)
         {
-            if (OnPlayerSplit == null) return false;
+            if (OnPlayerSplit == null)
+            {
+                if (InternalOnUnhandledReducerError != null)
+                {
+                    switch (ctx.Event.Status)
+                    {
+                        case Status.Failed(var reason): InternalOnUnhandledReducerError(ctx, new Exception(reason)); break;
+                        case Status.OutOfEnergy(var _): InternalOnUnhandledReducerError(ctx, new Exception("out of energy")); break;
+                    }
+                }
+                return false;
+            }
             OnPlayerSplit(
                 ctx
             );

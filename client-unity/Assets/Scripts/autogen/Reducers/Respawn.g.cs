@@ -22,7 +22,18 @@ namespace SpacetimeDB.Types
 
         public bool InvokeRespawn(ReducerEventContext ctx, Reducer.Respawn args)
         {
-            if (OnRespawn == null) return false;
+            if (OnRespawn == null)
+            {
+                if (InternalOnUnhandledReducerError != null)
+                {
+                    switch (ctx.Event.Status)
+                    {
+                        case Status.Failed(var reason): InternalOnUnhandledReducerError(ctx, new Exception(reason)); break;
+                        case Status.OutOfEnergy(var _): InternalOnUnhandledReducerError(ctx, new Exception("out of energy")); break;
+                    }
+                }
+                return false;
+            }
             OnRespawn(
                 ctx
             );

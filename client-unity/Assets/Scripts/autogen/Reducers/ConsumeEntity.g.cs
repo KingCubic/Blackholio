@@ -22,7 +22,18 @@ namespace SpacetimeDB.Types
 
         public bool InvokeConsumeEntity(ReducerEventContext ctx, Reducer.ConsumeEntity args)
         {
-            if (OnConsumeEntity == null) return false;
+            if (OnConsumeEntity == null)
+            {
+                if (InternalOnUnhandledReducerError != null)
+                {
+                    switch (ctx.Event.Status)
+                    {
+                        case Status.Failed(var reason): InternalOnUnhandledReducerError(ctx, new Exception(reason)); break;
+                        case Status.OutOfEnergy(var _): InternalOnUnhandledReducerError(ctx, new Exception("out of energy")); break;
+                    }
+                }
+                return false;
+            }
             OnConsumeEntity(
                 ctx,
                 args.Request
